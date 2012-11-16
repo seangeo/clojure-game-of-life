@@ -1,6 +1,6 @@
-(ns life.core-test
+(ns seangeo.life-test
   (:use clojure.test
-        life.core))
+        seangeo.life))
 
 (deftest a-test
   (testing "FIXME, I fail."
