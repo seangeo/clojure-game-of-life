@@ -1,6 +1,8 @@
 (ns seangeo.life
   (:gen-class))
 
+(load "model")
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]

@@ -1,0 +1,2 @@
+(in-ns 'seangeo.life)
+
