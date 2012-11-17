@@ -60,28 +60,48 @@
 
 ;;;;;;;;;;;; UI!
 (import 
-  '(javax.swing JFrame JPanel)
+  '(javax.swing JFrame JPanel SwingUtilities)
   '(java.awt Dimension Color))
 
 (def title "Game of Life")
 (def height 300)
 (def width  400)
-(def grid-height (/ height 5))
-(def grid-width  (/ width  5))
-(def animation-sleep-ms 500)
+(def automaton-height 10)
+(def automaton-width  10)
+(def grid-height (/ height automaton-height))
+(def grid-width  (/ width  automaton-width))
+(def animation-sleep-ms 150)
+
+(defn render-automaton
+  [graphics automaton]
+  (let 
+    [x (* (:x automaton) automaton-width)
+     y (* (:y automaton) automaton-height)]
+    (.fillRect graphics x y automaton-width automaton-height)))
+
+(defn render-world
+  [graphics the-world]
+  (doto graphics
+    (.setColor Color/WHITE)
+    (.fillRect 0 0 width height)
+    (.setColor Color/BLACK))
+  (dorun
+    (for [automaton the-world]
+      (render-automaton graphics automaton))))
 
 (defn render
-  [graphics world]
-  (doto graphics
-    (.setColor Color/BLACK)
-    (.fillRect 10 10 10 10))
-  graphics)
+  [panel the-world]
+  (let [runnable (proxy [Runnable] []
+                   (run []
+                     (render-world (.getGraphics panel) the-world)))]
+        (SwingUtilities/invokeLater runnable))
+  panel)
 
 (defn update-world [my-world renderer]
   (send-off *agent* update-world renderer)
   (let [new-world (evolve-world my-world grid-width grid-height)]
     (send-off renderer render new-world)
-    (println new-world)
+    ; (println new-world)
     (. Thread (sleep animation-sleep-ms))
     new-world))
 
@@ -99,11 +119,11 @@
       (.setContentPane panel)
       (.setVisible true)
       (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE))
-    (let [renderer (agent (.getGraphics panel))]
+    (let [renderer (agent panel)]
       (send-off renderer render world)
       (send-off world-updater update-world renderer))))
 
 (defn -main
   [& args]
-  (run-ui (world [[1 1] [1 0] [1 2]])))
+  (run-ui (world [[2 1] [2 3] [1 3] [3 2] [3 3]])))
 
