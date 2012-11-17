@@ -72,6 +72,11 @@
 (def grid-width  (/ width  automaton-width))
 (def animation-sleep-ms 150)
 
+(defmacro in-swing [fn]
+  `(let [runnable# (proxy [Runnable] []
+                     (run [] ~fn))]
+     (SwingUtilities/invokeLater runnable#)))
+
 (defn render-automaton
   [graphics automaton]
   (let 
@@ -89,12 +94,8 @@
     (for [automaton the-world]
       (render-automaton graphics automaton))))
 
-(defn render
-  [panel the-world]
-  (let [runnable (proxy [Runnable] []
-                   (run []
-                     (render-world (.getGraphics panel) the-world)))]
-        (SwingUtilities/invokeLater runnable))
+(defn render [panel the-world]
+  (in-swing (render-world (.getGraphics panel) the-world))
   panel)
 
 (defn update-world [my-world renderer]
