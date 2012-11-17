@@ -2,8 +2,6 @@
   (:gen-class)
   (use clojure.set))
 
-(load "ui")
-
 (defrecord Automaton [x y])
 
 (defn world
@@ -60,7 +58,52 @@
   [current-world width height]
   (reduce (partial evolve-cell current-world) #{} (world-cells width height)))
 
+;;;;;;;;;;;; UI!
+(import 
+  '(javax.swing JFrame JPanel)
+  '(java.awt Dimension Color))
+
+(def title "Game of Life")
+(def height 300)
+(def width  400)
+(def grid-height (/ height 5))
+(def grid-width  (/ width  5))
+(def animation-sleep-ms 500)
+
+(defn render
+  [graphics world]
+  (doto graphics
+    (.setColor Color/BLACK)
+    (.fillRect 10 10 10 10))
+  graphics)
+
+(defn update-world [my-world renderer]
+  (send-off *agent* update-world renderer)
+  (let [new-world (evolve-world my-world grid-width grid-height)]
+    (send-off renderer render new-world)
+    (println new-world)
+    (. Thread (sleep animation-sleep-ms))
+    new-world))
+
+(defn- error [a e]
+  (println e)
+  (.printStackTrace e))
+
+(defn run-ui
+  [world]
+  (let [world-updater (agent world :error-handler error)
+        frame (JFrame. title)
+        panel (JPanel. true)]
+    (doto frame
+      (.setSize (Dimension. width height))
+      (.setContentPane panel)
+      (.setVisible true)
+      (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE))
+    (let [renderer (agent (.getGraphics panel))]
+      (send-off renderer render world)
+      (send-off world-updater update-world renderer))))
+
 (defn -main
   [& args]
-  (run-ui))
+  (run-ui (world [[1 1] [1 0] [1 2]])))
 
