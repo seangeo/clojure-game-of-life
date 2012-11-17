@@ -84,12 +84,15 @@
      y (* (:y automaton) automaton-height)]
     (.fillRect graphics x y automaton-width automaton-height)))
 
-(defn render-world
-  [graphics the-world]
+(defn clear-screen [graphics]
   (doto graphics
     (.setColor Color/WHITE)
-    (.fillRect 0 0 width height)
-    (.setColor Color/BLACK))
+    (.fillRect 0 0 width height)))
+
+(defn render-world
+  [graphics the-world]
+  (clear-screen graphics)
+  (.setColor graphics Color/BLACK)
   (dorun
     (for [automaton the-world]
       (render-automaton graphics automaton))))
@@ -102,7 +105,6 @@
   (send-off *agent* update-world renderer)
   (let [new-world (evolve-world my-world grid-width grid-height)]
     (send-off renderer render new-world)
-    ; (println new-world)
     (. Thread (sleep animation-sleep-ms))
     new-world))
 
