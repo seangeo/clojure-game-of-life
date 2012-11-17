@@ -37,7 +37,11 @@
     [automaton     (apply ->Automaton cell)
      my-neighbours (world (neighbours automaton))
      live-neighbours (count (intersection my-world my-neighbours))]
-    (if (and (alive? automaton my-world) (enough-to-survive? live-neighbours)) #{automaton} #{})))
+    (if (and 
+          (alive? automaton my-world) 
+          (enough-to-survive? live-neighbours)) 
+      #{automaton} 
+      #{})))
 
 (defn birth
   [cell my-world]
