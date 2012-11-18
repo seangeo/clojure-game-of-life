@@ -64,22 +64,28 @@
 
 ;;;;;;;;;;;; UI!
 (import 
-  '(javax.swing JFrame JPanel SwingUtilities)
-  '(java.awt Dimension Color))
+  '(javax.swing JFrame JPanel SwingUtilities JButton)
+  '(java.awt Dimension Color BorderLayout)
+  '(java.awt.event ActionListener))
 
 (def title "Game of Life")
-(def height 300)
-(def width  400)
+(def height 600)
+(def width  800)
 (def automaton-height 10)
 (def automaton-width  10)
 (def grid-height (/ height automaton-height))
 (def grid-width  (/ width  automaton-width))
-(def animation-sleep-ms 150)
+(def animation-sleep-ms 0)
+(defrecord WorldUpdater [world renderer running])
 
 (defmacro in-swing [fn]
   `(let [runnable# (proxy [Runnable] []
                      (run [] ~fn))]
      (SwingUtilities/invokeLater runnable#)))
+
+(defmacro actionlistener [fn]
+  `(proxy [ActionListener] []
+     (actionPerformed [evt#] ~fn)))
 
 (defn render-automaton
   [graphics automaton]
@@ -102,33 +108,51 @@
       (render-automaton graphics automaton))))
 
 (defn render [panel the-world]
-  (in-swing (render-world (.getGraphics panel) the-world))
-  panel)
+  (in-swing (render-world (.getGraphics panel) the-world)) panel)
 
-(defn update-world [my-world renderer]
-  (send-off *agent* update-world renderer)
-  (let [new-world (evolve-world my-world grid-width grid-height)]
+(defn update-world [world-updater]
+  (let [old-world (:world world-updater)
+        renderer  (:renderer world-updater)
+        running   (:running world-updater)
+        new-world (time (evolve-world old-world grid-width grid-height))]
+    (when running (send-off *agent* update-world))
     (send-off renderer render new-world)
     (. Thread (sleep animation-sleep-ms))
-    new-world))
+    (->WorldUpdater new-world renderer running)))
+
+(defn- pause [world-updater]
+  (let [running (not (:running world-updater))]
+    (when running (send-off *agent* update-world))
+    (assoc world-updater :running running)))
 
 (defn- error [a e]
   (println e)
   (.printStackTrace e))
 
-(defn run-ui
-  [world]
-  (let [world-updater (agent world :error-handler error)
-        frame (JFrame. title)
-        panel (JPanel. true)]
+(defn pause-button [world-updater]
+  (let [pause-button (JButton. "Pause/Play")]
+    (.addActionListener 
+      pause-button
+      (actionlistener (send-off world-updater pause)))
+    pause-button))
+
+(defn run-ui [world]
+  (let [frame        (JFrame. title)
+        surface      (JPanel. true)
+        renderer     (agent surface)
+        button-panel (JPanel. true)
+        world-updater (->WorldUpdater world renderer true)
+        world-updater-agent (agent world-updater :error-handler error)]
+    (doto button-panel
+      (.add (pause-button world-updater-agent)))
     (doto frame
       (.setSize (Dimension. width height))
-      (.setContentPane panel)
+      (.add button-panel BorderLayout/NORTH)
+      (.add surface BorderLayout/CENTER)
       (.setVisible true)
       (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE))
-    (let [renderer (agent panel)]
-      (send-off renderer render world)
-      (send-off world-updater update-world renderer))))
+    (send-off renderer render world)
+    (send-off world-updater-agent update-world)))
 
 (defn -main
   [& args]
