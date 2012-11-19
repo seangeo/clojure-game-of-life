@@ -21,8 +21,6 @@ file but it all requires manual hacking atm.
 * Make the world Editable!!
 * Profit!!
 
-!!
-
 ## License
 
 Copyright © 2012 Sean Geoghegan.
