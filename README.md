@@ -1,35 +1,31 @@
 # life
 
-FIXME: description
+Conway's Game of Life in Clojure.
+
+My first clojure program built at Rails Camp AU 12.
 
 ## Installation
 
-Download from http://example.com/FIXME.
+Uses [Leiningen](https://github.com/technomancy/leiningen).
 
 ## Usage
 
-FIXME: explanation
+    $ lien run
 
-    $ java -jar life-0.1.0-standalone.jar [args]
+There are some pre-built starting patterns you can select in the life.clj
+file but it all requires manual hacking atm.
 
-## Options
+## TODO
 
-FIXME: listing of options this app accepts.
+* Make the world Infinite!!
+* Make the world Editable!!
+* Profit!!
 
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
+!!
 
 ## License
 
-Copyright © 2012 FIXME
+Copyright © 2012 Sean Geoghegan.
 
 Distributed under the Eclipse Public License, the same as Clojure.
+
