@@ -142,7 +142,11 @@
     (send-off renderer render world)
     (send-off world-updater-agent update-world)))
 
+(def die-hard [[6 7] [7 7] [7 8] [12 6] [11 8] [12 8] [13 8]])
+(def acorn [[12 11] [11 13] [12 13] [14 12] [15 13] [16 13] [17 13]])
+(def r-pentomino [[21 22] [22 21] [22 22] [22 23] [23 21]])
+
 (defn -main
   [& args]
-  (run-ui (world [[2 1] [2 3] [1 3] [3 2] [3 3]])))
+  (run-ui (world r-pentomino)))
 
