@@ -9,7 +9,7 @@
   (set (map #(apply ->Automaton %1) live-cells)))
 
 (defn neighbours
-  [automaton]
+  [automaton width height]
   (let
     [cx (:x automaton)
      cy (:y automaton)
@@ -23,44 +23,32 @@
   [automaton my-world]
   (contains? my-world automaton))
 
-(defn dead?
-  [automaton my-world]
-  (not (contains? my-world automaton)))
-
 (defn enough-to-survive?
   [live-neighbours]
   (or (= 2 live-neighbours) (= 3 live-neighbours)))
 
-(defn survivor
-  [cell my-world]
-  (let
-    [automaton     (apply ->Automaton cell)
-     my-neighbours (world (neighbours automaton))
-     live-neighbours (count (intersection my-world my-neighbours))]
-    (if (and 
-          (alive? automaton my-world) 
-          (enough-to-survive? live-neighbours)) 
-      #{automaton} 
-      #{})))
-
-(defn birth
-  [cell my-world]
-  (let
-    [potential-life (apply ->Automaton cell)
-     my-neighbours (world (neighbours potential-life))
-     potential-parents (count (intersection my-world my-neighbours))]
-     (if (and (= potential-parents 3) (dead? potential-life my-world)) 
-       #{potential-life} #{})))
+(defn living-automaton 
+  [automaton alive? number-of-neighbours]
+  (if (or 
+        (and alive? (enough-to-survive? number-of-neighbours))
+        (and (not alive?) (= number-of-neighbours 3)))
+    #{automaton}
+    #{}))
 
 (defn world-cells [width height]
   (for [x (range width) y (range height)] [x y]))
 
-(defn evolve-cell [old-world new-world cell]
-  (union new-world (birth cell old-world) (survivor cell old-world)))
+(defn evolve-cell [old-world width height new-world cell]
+  (let 
+    [automaton (apply ->Automaton cell)
+     currently-alive (alive? automaton old-world)
+     cell-neighbours (world (neighbours automaton width height))
+     live-neighbours (count (intersection old-world cell-neighbours))]
+  (union new-world (living-automaton automaton currently-alive live-neighbours))))
 
 (defn evolve-world
   [current-world width height]
-  (reduce (partial evolve-cell current-world) #{} (world-cells width height)))
+  (reduce (partial evolve-cell current-world width height) #{} (world-cells width height)))
 
 ;;;;;;;;;;;; UI!
 (import 
